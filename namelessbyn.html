@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>City Messages</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f1f1f1;
+      padding: 20px;
+    }
+    textarea {
+      width: 100%;
+      height: 200px;
+      padding: 10px;
+      margin-bottom: 15px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      resize: vertical;
+    }
+    button.generate-btn {
+      padding: 10px 20px;
+      background-color: #007bff;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      margin-bottom: 20px;
+    }
+    .output {
+      background-color: #fff;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      margin-bottom: 30px;
+    }
+    .city-title {
+      text-align: center;
+      font-weight: bold;
+      text-transform: uppercase;
+      font-size: 20px;
+      margin-bottom: 20px;
+    }
+    .line-container {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+      border: 1px solid #ddd;
+      padding: 10px;
+      border-radius: 6px;
+    }
+    .line-text {
+      flex: 1;
+      margin-right: 10px;
+    }
+    .copy-btn {
+      background-color: #28a745;
+      color: white;
+      border: none;
+      padding: 6px 12px;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    .copy-btn:hover {
+      background-color: #218838;
+    }
+  </style>
+</head>
+<body>
+
+  <h2>Enter City Message Blocks</h2>
+  <textarea id="inputText" placeholder="Paste city message blocks here..."></textarea>
+  <br />
+  <button class="generate-btn" onclick="generateOutput()">Generate</button>
+
+  <div id="outputSections"></div>
+
+  <script>
+    function generateOutput() {
+      const input = document.getElementById("inputText").value.trim();
+      const sections = input.split(/\n(?=[^\s])/g); // split into city blocks
+
+      const output = document.getElementById("outputSections");
+      output.innerHTML = "";
+
+      let currentCity = null;
+      let messages = [];
+
+      function renderCityBlock(city, messages) {
+        const sectionDiv = document.createElement("div");
+        sectionDiv.className = "output";
+
+        const cityTitle = document.createElement("div");
+        cityTitle.className = "city-title";
+        cityTitle.textContent = city.toUpperCase() + ":";
+        sectionDiv.appendChild(cityTitle);
+
+        messages.slice(0, 11).forEach((line, i) => {
+          const lineDiv = document.createElement("div");
+          lineDiv.className = "line-container";
+
+          const textSpan = document.createElement("span");
+          textSpan.className = "line-text";
+          textSpan.textContent = line;
+
+          const copyBtn = document.createElement("button");
+          copyBtn.className = "copy-btn";
+          copyBtn.textContent = `Copy ${i + 1}`;
+          copyBtn.onclick = () => {
+            navigator.clipboard.writeText(line);
+            copyBtn.textContent = "Copied!";
+            setTimeout(() => copyBtn.textContent = `Copy ${i + 1}`, 1000);
+          };
+
+          lineDiv.appendChild(textSpan);
+          lineDiv.appendChild(copyBtn);
+          sectionDiv.appendChild(lineDiv);
+        });
+
+        output.appendChild(sectionDiv);
+      }
+
+      const lines = input.split(/\r?\n/).map(line => line.trim()).filter(Boolean);
+      for (const line of lines) {
+        if (line.endsWith(":")) {
+          if (currentCity && messages.length > 0) {
+            renderCityBlock(currentCity, messages);
+          }
+          currentCity = line.replace(":", "").trim();
+          messages = [];
+        } else if (currentCity) {
+          messages.push(line);
+        }
+      }
+
+      if (currentCity && messages.length > 0) {
+        renderCityBlock(currentCity, messages);
+      }
+    }
+  </script>
+</body>
+</html>
