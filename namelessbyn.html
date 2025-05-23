@@ -9,7 +9,9 @@
       font-family: Arial, sans-serif;
       background-color: #f1f1f1;
       padding: 20px;
+      transition: background-color 0.3s, color 0.3s;
     }
+
     textarea {
       width: 100%;
       height: 200px;
@@ -19,6 +21,7 @@
       border: 1px solid #ccc;
       resize: vertical;
     }
+
     button.generate-btn {
       padding: 10px 20px;
       background-color: #007bff;
@@ -28,50 +31,119 @@
       cursor: pointer;
       margin-bottom: 20px;
     }
+
     .output {
       background-color: #fff;
-      padding: 20px;
+      padding: 12px;
       border-radius: 10px;
       box-shadow: 0 0 10px rgba(0,0,0,0.1);
-      margin-bottom: 30px;
+      margin-bottom: 20px;
+      max-width: 100%;
     }
+
     .city-title {
       text-align: center;
       font-weight: bold;
       text-transform: uppercase;
-      font-size: 20px;
-      margin-bottom: 20px;
+      font-size: 18px;
+      margin-bottom: 10px;
+      cursor: pointer;
+      user-select: none;
     }
+
     .line-container {
       display: flex;
-      justify-content: space-between;
+      justify-content: flex-start;
       align-items: center;
-      margin-bottom: 10px;
+      margin-bottom: 8px;
       border: 1px solid #ddd;
-      padding: 10px;
+      padding: 6px 8px;
       border-radius: 6px;
+      font-size: 14px;
     }
+
     .line-text {
       flex: 1;
-      margin-right: 10px;
+      word-break: break-word;
     }
+
     .copy-btn {
       background-color: #28a745;
       color: white;
       border: none;
-      padding: 6px 12px;
-      border-radius: 5px;
+      padding: 4px 8px;
+      border-radius: 4px;
       cursor: pointer;
+      font-size: 12px;
+      margin-right: 10px;
+      white-space: nowrap;
     }
+
     .copy-btn:hover {
       background-color: #218838;
+    }
+
+    .message-container {
+      transition: max-height 0.3s ease;
+      overflow: hidden;
+      max-height: 1000px;
+    }
+
+    .message-container.collapsed {
+      max-height: 0;
+      padding: 0;
+      margin: 0;
+    }
+
+    /* Dark Mode */
+    .dark-mode {
+      background-color: #121212;
+      color: #f1f1f1;
+    }
+
+    .dark-mode textarea {
+      background-color: #1e1e1e;
+      color: #f1f1f1;
+      border-color: #555;
+    }
+
+    .dark-mode .output {
+      background-color: #1e1e1e;
+      box-shadow: 0 0 10px rgba(255, 255, 255, 0.05);
+    }
+
+    .dark-mode .line-container {
+      border-color: #444;
+    }
+
+    .dark-mode .copy-btn {
+      background-color: #4caf50;
+    }
+
+    .dark-mode .copy-btn:hover {
+      background-color: #388e3c;
+    }
+
+    .dark-mode .generate-btn {
+      background-color: #555;
+    }
+
+    .dark-mode .city-title {
+      color: #f1f1f1;
     }
   </style>
 </head>
 <body>
 
-  <h2>Enter City Message Blocks</h2>
-  <textarea id="inputText" placeholder="Paste city message blocks here..."></textarea>
+  <h2>Emma loves Robyn</h2>
+
+  <!-- Dark Mode Toggle -->
+  <div style="margin-bottom: 15px; text-align: right;">
+    <button id="toggleDarkMode" class="generate-btn" style="background-color: #333;">🌙 Dark Mode</button>
+  </div>
+
+  <!-- Input Textarea -->
+  <textarea id="inputText" placeholder="Paste city message blocks here..." autofocus></textarea>
   <br />
   <button class="generate-btn" onclick="generateOutput()">Generate</button>
 
@@ -80,8 +152,6 @@
   <script>
     function generateOutput() {
       const input = document.getElementById("inputText").value.trim();
-      const sections = input.split(/\n(?=[^\s])/g); // split into city blocks
-
       const output = document.getElementById("outputSections");
       output.innerHTML = "";
 
@@ -94,16 +164,14 @@
 
         const cityTitle = document.createElement("div");
         cityTitle.className = "city-title";
-        cityTitle.textContent = city.toUpperCase() + ":";
-        sectionDiv.appendChild(cityTitle);
+        cityTitle.textContent = city.toUpperCase() + " ▼";
+
+        const messageContainer = document.createElement("div");
+        messageContainer.className = "message-container";
 
         messages.slice(0, 11).forEach((line, i) => {
           const lineDiv = document.createElement("div");
           lineDiv.className = "line-container";
-
-          const textSpan = document.createElement("span");
-          textSpan.className = "line-text";
-          textSpan.textContent = line;
 
           const copyBtn = document.createElement("button");
           copyBtn.className = "copy-btn";
@@ -114,11 +182,22 @@
             setTimeout(() => copyBtn.textContent = `Copy ${i + 1}`, 1000);
           };
 
-          lineDiv.appendChild(textSpan);
+          const textSpan = document.createElement("span");
+          textSpan.className = "line-text";
+          textSpan.textContent = line;
+
           lineDiv.appendChild(copyBtn);
-          sectionDiv.appendChild(lineDiv);
+          lineDiv.appendChild(textSpan);
+          messageContainer.appendChild(lineDiv);
         });
 
+        cityTitle.onclick = () => {
+          const collapsed = messageContainer.classList.toggle("collapsed");
+          cityTitle.textContent = city.toUpperCase() + (collapsed ? " ▼" : " ▲");
+        };
+
+        sectionDiv.appendChild(cityTitle);
+        sectionDiv.appendChild(messageContainer);
         output.appendChild(sectionDiv);
       }
 
@@ -138,7 +217,39 @@
       if (currentCity && messages.length > 0) {
         renderCityBlock(currentCity, messages);
       }
+
+      // Auto-collapse for mobile
+      if (window.innerWidth <= 768) {
+        document.querySelectorAll(".message-container").forEach(mc => mc.classList.add("collapsed"));
+        document.querySelectorAll(".city-title").forEach(ct => {
+          const cityName = ct.textContent.replace(" ▲", "").replace(" ▼", "");
+          ct.textContent = cityName + " ▼";
+        });
+      }
     }
+
+    // Dark mode toggle
+    const toggleBtn = document.getElementById("toggleDarkMode");
+    const body = document.body;
+
+    toggleBtn.addEventListener("click", () => {
+      body.classList.toggle("dark-mode");
+      const dark = body.classList.contains("dark-mode");
+      toggleBtn.textContent = dark ? "☀️ Light Mode" : "🌙 Dark Mode";
+      localStorage.setItem("darkMode", dark);
+    });
+
+    if (localStorage.getItem("darkMode") === "true") {
+      body.classList.add("dark-mode");
+      toggleBtn.textContent = "☀️ Light Mode";
+    }
+
+    // Ctrl+Enter to generate
+    document.getElementById("inputText").addEventListener("keydown", function (e) {
+      if (e.ctrlKey && e.key === "Enter") {
+        generateOutput();
+      }
+    });
   </script>
 </body>
 </html>
